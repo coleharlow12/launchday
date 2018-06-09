@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Simple Map</title>
+    <title>Launchday</title>
     <meta name="viewport" content="initial-scale=1.0">
     <meta charset="utf-8">
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
@@ -12,18 +12,38 @@
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
       #map {
-        height: 88%;
+        height: 75%;
       }
       /* Optional: Makes the sample page fill the window. */
-      html, body {
+      html {
         height: 100%;
         margin: 0;
         padding: 0;
       }
+
+      body {
+        height: 100%;
+        width: 80%;
+        margin: 0 auto;
+      }
+      /* Button */
+
+      a {
+        margin-left: 40%;
+        margin-top: 5%;
+        margin-bottom: 5%;
+        width: 200px;
+        height: 50px;
+      }
     </style>
   </head>
   <body>
-    <h1>Launchday</h1>
     <div id="map"></div>
+    <div class="main">
+      <div class="info">
+        <button id="start-stop">TRACK BALLOON</button>
+        <a id="location-button" href="" target="_blank">Click here to open in Google Maps</a>
+      </div>
+    </div>
   </body>
 </html>
