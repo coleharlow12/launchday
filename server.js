@@ -2,7 +2,9 @@
 const express 	= require('express');
 const cors 			= require('cors');
 const request 	= require('request');
-const path 			= require('path');
+const logger            = require('morgan');
+const path              = require('path');
+const bodyParser        = require('body-parser');
 
 const app = express();
 
@@ -13,6 +15,11 @@ let locationRoutes = require('./server/routes/locationRoutes');
 
 // Use routes
 app.use(locationRoutes);
+
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('*', (req, res) => {
 	res.sendFile(__dirname + '/public/index.html');
