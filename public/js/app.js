@@ -1,6 +1,10 @@
 'use strict';
+
+// Global variables
 let currentLatitude;
 let currentLongitude;
+let map;
+let markers = [];
 
 window.onload = function() {}
 
@@ -9,7 +13,6 @@ function error(error) {
 };
 
 function generateGoogleMap(position) {
-  let map;
   map = new google.maps.Map(document.getElementById('map'), {
     center: {lat: position.coords.latitude, lng: position.coords.longitude},
     zoom: 15
@@ -17,10 +20,10 @@ function generateGoogleMap(position) {
 
   let marker = new google.maps.Marker({
     position: {lat: position.coords.latitude, lng: position.coords.longitude},
-    map: map
-    // animation: google.maps.Animation.DROP
+    map: map,
+    title: 'Me'
   });
-  // let marker = dropPin(map, {lat: position.coords.latitude, lng: position.coords.longitude});
+  markers.push(marker);
   let geocoder = new google.maps.Geocoder;
   let infowindow = new google.maps.InfoWindow;
   geocoder.geocode({'location': {lat: position.coords.latitude, lng: position.coords.longitude}}, function(results, status) {
@@ -35,10 +38,40 @@ function generateGoogleMap(position) {
       window.alert('Geocoder failed due to: ' + status);
     }
   });
+
+  let showBalloon = getBalloonLocation();
 };
 
 function getBalloonLocation() {
-  
+  $.get('/api/location', function(data, status) {
+    generateMarker(data);
+  });
+}
+
+function generateMarker(coordinates) {
+  let geocoder = new google.maps.Geocoder;
+  let infowindow = new google.maps.InfoWindow;
+  geocoder.geocode({'location': {lat: coordinates.latitude, lng: coordinates.longitude}}, function(results, status) {
+    if (status === google.maps.GeocoderStatus.OK) {
+      infowindow.setContent(results[0].formatted_address);
+    }
+  });
+  let balloon = new google.maps.Marker({
+    position: {lat: coordinates.latitude, lng: coordinates.longitude},
+    map: map,
+    title: 'Balloon'
+  });
+  infowindow.open(map, balloon);
+  markers.push(balloon);
+  expandMap();
+}
+
+function expandMap() {
+  let bounds = new google.maps.LatLngBounds();
+  for (var i = 0; i < markers.length; i++) {
+    bounds.extend(markers[i].getPosition());
+  }
+  map.fitBounds(bounds);
 }
 
 function geoFindMe() {
@@ -51,4 +84,6 @@ function geoFindMe() {
 };
 
 let position = geoFindMe();
+// let balloon = getBalloonLocation();
 generateGoogleMap(position);
+// getBalloonLocation();
