@@ -4,7 +4,9 @@
 let currentLatitude;
 let currentLongitude;
 let map;
+let balloonPath;
 let markers = [];
+let locationsArray = [];
 let locating = false;
 let trackingActive;
 let currentBalloonCoordinates;
@@ -34,13 +36,13 @@ $(document).ready(function() {
     });
 
     // Current current location marker
-    let marker = new google.maps.Marker({
-      position: {lat: position.coords.latitude, lng: position.coords.longitude},
-      map: map,
-      title: 'Me'
-    });
-    // Push marker into markers array
-    markers.push(marker);
+    // let marker = new google.maps.Marker({
+    //   position: {lat: position.coords.latitude, lng: position.coords.longitude},
+    //   map: map,
+    //   title: 'Me'
+    // });
+    // // Push marker into markers array
+    // markers.push(marker);
 
     // Load Google geocoder and infowindow for detailed marker labels
     let geocoder = new google.maps.Geocoder;
@@ -91,7 +93,8 @@ $(document).ready(function() {
     $.get('/api/location', function(data, status) {
       if (JSON.stringify(currentBalloonCoordinates) !== JSON.stringify(data)) {
         // If newly retrieved coordinates do NOT match previous coordinates, update map and button
-        generateMarker(data);
+        // generateMarker(data);
+        generatePath(data);
         updateButton(data);
         // Set balloon coordinates to equal new location data
         currentBalloonCoordinates = data;
@@ -101,13 +104,13 @@ $(document).ready(function() {
 
   function generateMarker(coordinates) {
     // Generate marker and get address for marker label
-    let geocoder = new google.maps.Geocoder;
-    let infowindow = new google.maps.InfoWindow;
-    geocoder.geocode({'location': {lat: coordinates.latitude, lng: coordinates.longitude}}, function(results, status) {
-      if (status === google.maps.GeocoderStatus.OK) {
-        infowindow.setContent(results[0].formatted_address);
-      }
-    });
+    // let geocoder = new google.maps.Geocoder;
+    // let infowindow = new google.maps.InfoWindow;
+    // geocoder.geocode({'location': {lat: coordinates.latitude, lng: coordinates.longitude}}, function(results, status) {
+    //   if (status === google.maps.GeocoderStatus.OK) {
+    //     infowindow.setContent(results[0].formatted_address);
+    //   }
+    // });
     let balloon = new google.maps.Marker({
       // New marker titled 'Balloon'
       position: {lat: coordinates.latitude, lng: coordinates.longitude},
@@ -115,28 +118,54 @@ $(document).ready(function() {
       title: 'Balloon'
     });
     // Add new marker and label to map
-    infowindow.open(map, balloon);
+    // infowindow.open(map, balloon);
     // Push new marker into markers array
     markers.push(balloon);
+    expandMap();
+  }
+
+  function generatePath(coordinates) {
+    let googleCoordinates = new google.maps.LatLng(coordinates.latitude, coordinates.longitude);
+    locationsArray.push(googleCoordinates);
+    let balloonPath = new google.maps.Polyline({
+      path: locationsArray,
+      geodesic: true,
+      strokeColor: '#FF0000',
+      strokeOpacity: 1.0,
+      strokeWeight: 2
+    });
+    balloonPath.setMap(map);
     expandMap();
   }
 
   function expandMap() {
     // Get coordinates of all markers and expand map to display all
     let bounds = new google.maps.LatLngBounds();
-    for (var i = 0; i < markers.length; i++) {
-      bounds.extend(markers[i].getPosition());
+    for (var i = 0; i < locationsArray.length; i++) {
+      // bounds.extend(markers[i].getPosition());
+      bounds.extend(locationsArray[i]);
     }
     // Google function to resize map based on markers present
     map.fitBounds(bounds);
   }
 
+  function updateLocationText(coordinates) {
+
+  }
+
   function updateButton(coordinates) {
+    let $button = $('#location-button');
+    let geocoder = new google.maps.Geocoder;
+    geocoder.geocode({'location': {lat: coordinates.latitude, lng: coordinates.longitude}}, function(results, status) {
+      if (status === google.maps.GeocoderStatus.OK) {
+        $button.html('<p>' + results[0].formatted_address + '</p>');
+      }
+    });
     // Update the URL of the "Location Button" to link to the most recently returned coordinates
     let coordinatesString = (coordinates.latitude.toString()) + ',' + (coordinates.longitude.toString());
     let url = 'https://www.google.com/maps/search/?api=1&query=' + coordinatesString;
     // Get HTML element with ID of 'location-button' and set the 'href' attribute to equal the above URL
-    $('#location-button').attr('href', url);
+    $button.attr('href', url);
   }
 
   // Application start
